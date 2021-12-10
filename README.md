@@ -1,8 +1,8 @@
 # Rafael-Hernandez-Mendez_objeto_seguro
 
-En la clase del lunes un compañero preguntó si debíamos tener un solo programa o dos programas separados que tengan comunicación. 
-El profesor en la clase comentó que se podía tener todo en un solo programa. 
-Tengo entendido que el programa tiene dos objetos que son nuestras personas con sus respectivas llaves entonces sólo basta con que se declaren los objetos dentro de un solo programa, cierto?
+En el texto del proyecto se nos pide que el método responder reciba como entrada el nombre del objeto al que se le responderá pero en el texto del proyecto no se indicó que dicho método debería de tener el parámetro nombre. 
+
+No logro entender cuál es el propósito del método "esperar_respuesta"
 
 Saludos
 
