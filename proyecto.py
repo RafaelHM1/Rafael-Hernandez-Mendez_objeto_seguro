@@ -2,7 +2,7 @@ import base64
 from Crypto import Random
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
-
+import numpy as np
 
 class ObjetoSeguro:
     #esta es una clase de objeto seguro
@@ -19,6 +19,8 @@ class ObjetoSeguro:
 
     def llave_publica(self):
         #obtiene la llave pública del objeto seguro
+        self.publica = self.gen_llaves()
+        #self.llave_pub = self.publica.exportKey()
         self.pub_key = RSA.importKey(self.llave_pub.decode()) 
         return self.pub_key
 
@@ -33,85 +35,70 @@ class ObjetoSeguro:
         #cifra un mensaje con la llave pública del destinatario
         #retorna mensaje cifrado
         self.cifrar = PKCS1_OAEP.new(pub_key)
-        self.msj_cifrado = self.cifrar.encrypt(msj)
+        self.msj_cifrado = self.cifrar.encrypt(self.codificar64(msj))
         return self.msj_cifrado
-    
+
     def saludar(self, name, msj):
         #método accedido por el objeto que quiere comenzar comunicación
         #Entradas: nombre del objeto y mensaje cifrado con la llave pública del destinatario
-        self.name = name
-        self.msj = msj
-        self.responder(msj)
+        self.saludo = self.cifrar_msj(self.pub_key,msj)
+        print(f'{name} dice: {self.saludo}')
+        return self.saludo
 
-    def responder(self, msj):
-        #se ejecuta al recibir un saludo de otro objeto seguro
-        #Entradas: nombre del objeto al que se responderá
-        #Salidas: mensaje recibido con el string "MensajeRespuesta"
-        pass
-    
+    def decodificar64(self,msj):
+        #decodifica el mensaje en base64 en texto en claro
+        #retorna el mensaje en texto en plano
+        self.msj_descifrado = msj
+        self.mensaje_decodificado = base64.decodebytes(self.descifrar_msj(msj))
+        self.decodificado = self.mensaje_decodificado.decode()
+        return self.decodificado
+                
     def descifrar_msj(self, msj):
         #descifra el mensaje cifrado
         #retorna el mensaje en texto en plano codificado en base64
         self.priv_key = RSA.importKey(self.llave_priv.decode()) 
         self.descifrar = PKCS1_OAEP.new(self.priv_key)
+        self.msj_cifrado = msj
         self.mensaje_descifrado = self.descifrar.decrypt(msj)
         return self.mensaje_descifrado
-                
-    def decodificar64(self,msj):
-        #decodifica el mensaje en base64 en texto en claro
-        #retorna el mensaje en texto en plano
-        self.mensaje_decodificado = base64.decodebytes(msj)
-        self.msj = self.mensaje_decodificado.decode()
-        return self.msj
+
+    def responder(self, msj):
+        #se ejecuta al recibir un saludo de otro objeto seguro
+        #Entradas: nombre del objeto al que se responderá
+        #Salidas: mensaje recibido con el string "MensajeRespuesta"
+        self.decodificado = msj
+        self.respuesta = msj.join("MensajeRespuesta")
+        self.cifrar_msj(self.pub_key,self.respuesta)
 
     def almacenar_msj(self,msj):
         #almacena en un archivo el texto claro del mensaje
         #asigna un ID para identificarlo
         #El retorno es el ID en formato {"ID":<id>}.
         #El mensaje y el ID es lo mínimo que debe tener el registro
-
-        #with open('llave_privada.txt', 'w') as objeto_archivo:
-        #objeto_archivo.write(llave_privada.decode())
-       
-        pass
-
+        self.contador=0
+        registro = {'ID': self.contador+1, 'Nombre: ':self.nombre, 'Mensaje: ': msj}
+        np.save(f'RegistroMsj {self.nombre}.npy', registro)
+        with open(f'RegistroMsj {self.nombre}.txt', 'w') as registros_txt:
+            registros_txt.write(str(registro))
+        return f'ID:<{self.contador}>'
+        
     def consultar_msj(self,id):
-        #consula un mensaje en el registro usando ID asignado
-        #Formato: {"ID":"id", MSJ: "Mensaje_consultado", "campo1":"valor1"}
-        #with open('llave_privada.txt') as objeto_archivo:
-        #contenido_privado = objeto_archivo.read()
-        pass
+        leer_archivo = np.load(f'RegistroMsj {self.nombre}.npy',allow_pickle=True).item()
+        print(leer_archivo)
 
     def esperar_respuesta(self,msj):
         #espera una respuesta cifrada
         #debe llamar al método para almacenar el mensaje de respuesta recibido en texto plano
-        pass
+        self.almacenar_msj(msj)
 
 persona1 = ObjetoSeguro('Diego')
 persona2 = ObjetoSeguro('Alfonso')
 
-persona1.gen_llaves()
-persona2.gen_llaves()
-
-llave_publica_persona2 = persona2.llave_publica()
 llave_publica_persona1 = persona1.llave_publica()
-
-persona1.codificar64('Buen día Alfonso!')
-persona1.cifrar_msj(llave_publica_persona2, persona1.msj_codificado)
-persona1.saludar('Diego',persona1.msj_cifrado)
-
-persona2.descifrar_msj(persona1.msj_cifrado)
-persona2.decodificar64(persona2.mensaje_descifrado)
-print(persona2.msj)
-
-#print(persona1.msj_cifrado)
-#print(persona2.mensaje_descifrado)
-#print(persona1.llave_pub)
-#print(persona1.llave_priv)
+llave_publica_persona2 = persona2.llave_publica()
+persona1.saludar('Alfonso','Buen día Diego!')
+persona1.esperar_respuesta('Respuesta')
+persona2.responder('Hola!')
+persona1.consultar_msj(1)
 
 
-
-#print(persona2.llave_pub)
-#print(persona2.llave_priv)
-
-  
