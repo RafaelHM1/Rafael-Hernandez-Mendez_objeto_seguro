@@ -90,15 +90,3 @@ class ObjetoSeguro:
         #espera una respuesta cifrada
         #debe llamar al método para almacenar el mensaje de respuesta recibido en texto plano
         self.almacenar_msj(msj)
-
-persona1 = ObjetoSeguro('Diego')
-persona2 = ObjetoSeguro('Alfonso')
-
-llave_publica_persona1 = persona1.llave_publica()
-llave_publica_persona2 = persona2.llave_publica()
-persona1.saludar('Alfonso','Buen día Diego!')
-persona1.esperar_respuesta('Respuesta')
-persona2.responder('Hola!')
-persona1.consultar_msj(1)
-
-
