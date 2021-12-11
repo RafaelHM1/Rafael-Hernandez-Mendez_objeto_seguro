@@ -9,17 +9,18 @@ class ObjetoSeguro:
     #recibe el nombre en formato string
     def __init__(self,nombre):
         self.nombre = nombre
+        self.__llave_priv=self.__gen_llaves()
         
-    def gen_llaves(self):
+    def __gen_llaves(self):
         #genera la llave privada y su correspondiente llave pública
         self.llave = RSA.generate(2048, Random.new().read)
         self.llave_pub = self.llave.publickey().exportKey("PEM")
-        self.llave_priv = self.llave.exportKey("PEM")
-        return self.llave_pub.decode(), self.llave_priv.decode()
+        self.__llave_priv = self.llave.exportKey("PEM")
+        return self.llave_pub.decode(), self.__llave_priv.decode()
 
     def llave_publica(self):
         #obtiene la llave pública del objeto seguro
-        self.publica = self.gen_llaves()
+        self.publica = self.__gen_llaves()
         #self.llave_pub = self.publica.exportKey()
         self.pub_key = RSA.importKey(self.llave_pub.decode()) 
         return self.pub_key
@@ -51,14 +52,15 @@ class ObjetoSeguro:
         self.msj_descifrado = msj
         self.mensaje_decodificado = base64.decodebytes(self.descifrar_msj(msj))
         self.decodificado = self.mensaje_decodificado.decode()
+        print(f'Mensaje decodificado: {self.decodificado}')
         return self.decodificado
                 
     def descifrar_msj(self, msj):
         #descifra el mensaje cifrado
         #retorna el mensaje en texto en plano codificado en base64
-        self.priv_key = RSA.importKey(self.llave_priv.decode()) 
+        self.priv_key = RSA.importKey(self.__llave_priv.decode()) 
         self.descifrar = PKCS1_OAEP.new(self.priv_key)
-        self.msj_cifrado = msj
+        self.saludo = msj
         self.mensaje_descifrado = self.descifrar.decrypt(msj)
         return self.mensaje_descifrado
 
@@ -75,6 +77,7 @@ class ObjetoSeguro:
         #asigna un ID para identificarlo
         #El retorno es el ID en formato {"ID":<id>}.
         #El mensaje y el ID es lo mínimo que debe tener el registro
+        self.decodificado = msj
         self.contador=0
         registro = {'ID': self.contador+1, 'Nombre: ':self.nombre, 'Mensaje: ': msj}
         np.save(f'RegistroMsj {self.nombre}.npy', registro)
@@ -84,9 +87,11 @@ class ObjetoSeguro:
         
     def consultar_msj(self,id):
         leer_archivo = np.load(f'RegistroMsj {self.nombre}.npy',allow_pickle=True).item()
-        print(leer_archivo)
+        for elemento in leer_archivo.items():
+            print(elemento[id])
 
     def esperar_respuesta(self,msj):
         #espera una respuesta cifrada
         #debe llamar al método para almacenar el mensaje de respuesta recibido en texto plano
         self.almacenar_msj(msj)
+
